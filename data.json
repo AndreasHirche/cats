@@ -63,12 +63,12 @@
           "abends": "Jannis"
         },
         "21": {
-          "morgens": "Bruder",
-          "abends": "Bruder"
+          "morgens": "Jannis",
+          "abends": "Jannis"
         },
         "22": {
-          "morgens": "Bruder",
-          "abends": "Bruder"
+          "morgens": "Jannis",
+          "abends": "Jannis"
         },
         "23": {
           "morgens": "Papa",
@@ -89,5 +89,5 @@
       }
     }
   },
-  "saved": "2026-11-05T17:35:44.010Z"
+  "saved": "2026-11-05T17:36:24.979Z"
 }
