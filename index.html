@@ -230,6 +230,10 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',system-ui,sans-serif;b
         <button id="themeDark"  onclick="setTheme('dark')"   style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-size:.8rem;font-weight:600;cursor:pointer">🌙 Dunkel</button>
       </div>
     </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Namen</div>
+      <div id="nameInputs" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
     <div style="font-size:.72rem;color:var(--muted);margin-bottom:12px">
       Datensicherung (Notfall-Backup)
     </div>
@@ -239,7 +243,7 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',system-ui,sans-serif;b
     </div>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
     <div class="modal-btns">
-      <button class="btn-save" style="flex:1" onclick="closeSettings()">Fertig</button>
+      <button class="btn-save" style="flex:1" onclick="applyNameChanges();closeSettings()">Fertig</button>
     </div>
   </div>
 </div>
@@ -249,9 +253,11 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',system-ui,sans-serif;b
 const YEAR  = 2026;
 const MONTH = 10; // November = index 10
 
-const PERSONS = ['Alina','Bruder','Romy','Emily','Papa'];
-const COLORS  = {Alina:'#3b82f6',Bruder:'#f97316',Romy:'#22c55e',Emily:'#a855f7',Papa:'#ec4899'};
-const INITIALS= {Alina:'Al',Bruder:'Br',Romy:'Ro',Emily:'Em',Papa:'Pa'};
+const DEFAULT_PERSONS=['Alina','Jannis','Romy','Emily','Papa'];
+const BASE_COLORS=['#3b82f6','#f97316','#22c55e','#a855f7','#ec4899'];
+let PERSONS=[...DEFAULT_PERSONS];
+function getColor(n){const i=PERSONS.indexOf(n);return i>=0?BASE_COLORS[i]:'#64748b';}
+function getInitial(n){return n?n.slice(0,2):'??';}
 
 const WD_LONG = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 const MONTHS  = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
@@ -351,10 +357,10 @@ function renderMonthSummary(){
     const total=counts[p].m+counts[p].a;
     const chip=document.createElement('div');
     chip.className='ms-chip';
-    chip.style.borderColor=COLORS[p]+'44';
+    chip.style.borderColor=getColor(p)+'44';
     chip.innerHTML=
-      `<span class="ms-name" style="color:${COLORS[p]}">${p}</span>`+
-      `<span class="ms-count" style="color:${COLORS[p]}">${total}</span>`+
+      `<span class="ms-name" style="color:${getColor(p)}">${p}</span>`+
+      `<span class="ms-count" style="color:${getColor(p)}">${total}</span>`+
       `<span class="ms-label">${counts[p].m}🌅 ${counts[p].a}🌙</span>`;
     cont.appendChild(chip);
   });
@@ -397,7 +403,7 @@ function renderCalendar(){
     rm.appendChild(lm);
     if(entry.morgens){
       const chip=document.createElement('span');chip.className='slot-chip';
-      chip.style.background=COLORS[entry.morgens]||'#64748b';
+      chip.style.background=getColor(entry.morgens);
       chip.textContent=entry.morgens;
       rm.appendChild(chip);
     }else{
@@ -412,7 +418,7 @@ function renderCalendar(){
     ra.appendChild(la);
     if(entry.abends){
       const chip=document.createElement('span');chip.className='slot-chip';
-      chip.style.background=COLORS[entry.abends]||'#64748b';
+      chip.style.background=getColor(entry.abends);
       chip.textContent=entry.abends;
       ra.appendChild(chip);
     }else{
@@ -467,12 +473,12 @@ function renderPersonBtns(){
     PERSONS.forEach(p=>{
       const btn=document.createElement('div');
       btn.className='person-btn'+(sel===p?' sel':'');
-      const col=COLORS[p];
+      const col=getColor(p);
       if(sel===p){
         btn.style.cssText=`border-color:${col};background:${col}33;color:${col}`;
       }
       btn.innerHTML=
-        `<span class="person-btn-initial">${INITIALS[p]}</span>`+
+        `<span class="person-btn-initial">${getInitial(p)}</span>`+
         `<span class="person-btn-name">${p}</span>`;
       btn.onclick=()=>toggleSlot(slot,p);
       cont.appendChild(btn);
@@ -491,10 +497,47 @@ function clearDay(){editMorgens=null;editAbends=null;renderPersonBtns();}
 function closeDay(){document.getElementById('dayOverlay').classList.remove('show');}
 function overlayBgClick(e){if(e.target===document.getElementById('dayOverlay'))closeDay();}
 
-// ── Settings ──────────────────────────────────────────────────────────────
+// ── Names ─────────────────────────────────────────────────────────────────
+function loadNames(){
+  try{const s=JSON.parse(localStorage.getItem('katzen_names'));if(Array.isArray(s)&&s.length===5)PERSONS=s;}catch(e){}
+}
+function saveNames(){localStorage.setItem('katzen_names',JSON.stringify(PERSONS));}
+function renamePerson(oldN,newN){
+  if(!newN||newN===oldN)return;
+  for(const y of Object.keys(data))for(const m of Object.keys(data[y]))for(const d of Object.keys(data[y][m])){
+    const e=data[y][m][d];
+    if(e.morgens===oldN)e.morgens=newN;
+    if(e.abends===oldN)e.abends=newN;
+  }
+  const i=PERSONS.indexOf(oldN);if(i>=0)PERSONS[i]=newN;
+  saveNames();saveStorage();
+}
+function renderNameInputs(){
+  const cont=document.getElementById('nameInputs');cont.innerHTML='';
+  PERSONS.forEach((p,i)=>{
+    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:8px';
+    const dot=document.createElement('div');dot.style.cssText=`width:12px;height:12px;border-radius:50%;background:${BASE_COLORS[i]};flex-shrink:0`;
+    const inp=document.createElement('input');inp.type='text';inp.value=p;inp.dataset.idx=i;inp.dataset.orig=p;
+    inp.style.cssText='flex:1;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-size:.85rem;font-weight:600;outline:none';
+    inp.addEventListener('focus',()=>inp.style.borderColor=BASE_COLORS[i]);
+    inp.addEventListener('blur',()=>inp.style.borderColor='var(--border)');
+    row.appendChild(dot);row.appendChild(inp);cont.appendChild(row);
+  });
+}
+function applyNameChanges(){
+  const inputs=[...document.querySelectorAll('#nameInputs input')];
+  const newNames=inputs.map(i=>i.value.trim()||i.dataset.orig);
+  if(new Set(newNames).size<newNames.length){alert('Namen müssen eindeutig sein.');return;}
+  let changed=false;
+  inputs.forEach(inp=>{const orig=inp.dataset.orig;const newVal=inp.value.trim();if(newVal&&newVal!==orig){renamePerson(orig,newVal);changed=true;}});
+  if(changed)renderCalendar();
+}
+
+
 function openSettings(){
   const t=localStorage.getItem('katzen_theme')||'';
   setTimeout(()=>setTheme(t),50);
+  renderNameInputs();
   document.getElementById('settingsModal').classList.add('show');
 }
 function closeSettings(){document.getElementById('settingsModal').classList.remove('show');}
@@ -559,6 +602,7 @@ try{addSwipe(document.getElementById('daySheet'),()=>navigateDay(1),()=>navigate
 })();
 
 // ── Init ──────────────────────────────────────────────────────────────────
+loadNames();
 loadStorage();
 loadTheme();
 ghLoad().then(()=>renderCalendar()).catch(()=>renderCalendar());
