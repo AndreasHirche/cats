@@ -584,25 +584,28 @@ function playCatMelody(){
   try{
     var Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;
     var ac=new Ctx();
-    if(ac.state==='suspended'){ac.resume();}
-    if(ac.state!=='running'){try{ac.close();}catch(e){}return;} // kein User-Gesture -> spaeter erneut
     _melodyDone=true;
-    var notes=[523,587,659,784,659,587,523]; // C-D-E-G-E-D-C
-    var t=ac.currentTime+0.05;
-    notes.forEach(function(f){
-      var o=ac.createOscillator(),g=ac.createGain();
-      o.type='triangle';
-      o.frequency.setValueAtTime(f*0.95,t);
-      o.frequency.linearRampToValueAtTime(f,t+0.06);      // "mee" rauf
-      o.frequency.linearRampToValueAtTime(f*0.88,t+0.22); // "ow" runter
-      g.gain.setValueAtTime(0,t);
-      g.gain.linearRampToValueAtTime(0.16,t+0.03);
-      g.gain.exponentialRampToValueAtTime(0.001,t+0.26);
-      o.connect(g).connect(ac.destination);
-      o.start(t);o.stop(t+0.28);
-      t+=0.23;
-    });
     ['pointerdown','touchstart','keydown','click'].forEach(function(ev){window.removeEventListener(ev,playCatMelody,true);});
+    var schedule=function(){
+      var notes=[523,587,659,784,659,587,523]; // C-D-E-G-E-D-C
+      var t=ac.currentTime+0.06;
+      notes.forEach(function(f){
+        var o=ac.createOscillator(),g=ac.createGain();
+        o.type='triangle';
+        o.frequency.setValueAtTime(f*0.95,t);
+        o.frequency.linearRampToValueAtTime(f,t+0.06);      // "mee" rauf
+        o.frequency.linearRampToValueAtTime(f*0.88,t+0.22); // "ow" runter
+        g.gain.setValueAtTime(0,t);
+        g.gain.linearRampToValueAtTime(0.16,t+0.03);
+        g.gain.exponentialRampToValueAtTime(0.001,t+0.26);
+        o.connect(g).connect(ac.destination);
+        o.start(t);o.stop(t+0.28);
+        t+=0.23;
+      });
+    };
+    // resume() ist asynchron — Noten erst planen, wenn der Context laeuft
+    if(ac.state==='running'){schedule();}
+    else{ac.resume().then(schedule).catch(function(){});}
   }catch(e){}
 }
 ['pointerdown','touchstart','keydown','click'].forEach(function(ev){window.addEventListener(ev,playCatMelody,true);});
