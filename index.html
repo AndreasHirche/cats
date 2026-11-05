@@ -179,6 +179,7 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',system-ui,sans-serif;b
 <div class="app">
   <div class="topbar">
     <div class="month-title" id="monthTitle">November 2026 🐱</div>
+    <button class="icon-btn" title="Katzen-Spiel" onclick="location.href='Katzen/index.html'">🎮</button>
     <button class="icon-btn" title="Darstellung" onclick="openSettings()">⚙️</button>
     <div id="syncErr"></div>
   </div>
@@ -577,10 +578,36 @@ function addSwipe(el,onLeft,onRight){
 }
 try{addSwipe(document.getElementById('daySheet'),()=>navigateDay(1),()=>navigateDay(-1));}catch(e){}
 
+// ── Cat melody ────────────────────────────────────────────────────────────
+function playCatMelody(){
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;
+    const ac=new Ctx();if(ac.state==='suspended')ac.resume();
+    const notes=[523,587,659,784,659,587,523]; // C-D-E-G-E-D-C
+    let t=ac.currentTime+0.05;
+    notes.forEach(f=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.type='triangle';
+      o.frequency.setValueAtTime(f*0.95,t);
+      o.frequency.linearRampToValueAtTime(f,t+0.06);      // "mee" rauf
+      o.frequency.linearRampToValueAtTime(f*0.88,t+0.22); // "ow" runter
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(0.16,t+0.03);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.26);
+      o.connect(g).connect(ac.destination);
+      o.start(t);o.stop(t+0.28);
+      t+=0.23;
+    });
+  }catch(e){}
+}
+let _melodyPlayed=false;
+function _tryMelody(){if(_melodyPlayed)return;_melodyPlayed=true;playCatMelody();}
+['pointerdown','touchstart','keydown'].forEach(ev=>window.addEventListener(ev,_tryMelody,{once:true}));
+
 // ── Splash ────────────────────────────────────────────────────────────────
 (function(){
   const splash=document.getElementById('splash');
-  setTimeout(()=>splash.classList.add('splash-open'),500);
+  setTimeout(()=>{splash.classList.add('splash-open');_tryMelody();},500);
   setTimeout(()=>splash.classList.add('done'),2200);
 })();
 
