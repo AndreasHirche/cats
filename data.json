@@ -43,12 +43,12 @@
           "abends": "Papa"
         },
         "16": {
-          "morgens": "Bruder",
-          "abends": "Bruder"
+          "morgens": "Jannis",
+          "abends": "Jannis"
         },
         "17": {
-          "morgens": "Bruder",
-          "abends": "Bruder"
+          "morgens": "Jannis",
+          "abends": "Jannis"
         },
         "18": {
           "morgens": "Bruder",
@@ -89,5 +89,5 @@
       }
     }
   },
-  "saved": "2026-11-05T10:57:16.452Z"
+  "saved": "2026-11-05T17:35:35.907Z"
 }
