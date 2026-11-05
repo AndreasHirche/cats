@@ -97,6 +97,7 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',system-ui,sans-serif;b
   display:flex;flex-direction:column}
 .day-cell:active{background:rgba(255,255,255,0.07)}
 .day-cell.empty{background:transparent;border-color:transparent;cursor:default}
+.day-cell.inactive{opacity:.38;pointer-events:none}
 .day-cell.today .day-num{background:var(--acc);color:#fff;border-radius:50%}
 .day-num{font-size:.92rem;font-weight:700;color:var(--text);margin-bottom:2px;
   width:22px;height:22px;display:flex;align-items:center;justify-content:center}
@@ -388,8 +389,9 @@ function renderCalendar(){
     const isToday=today.getFullYear()===YEAR&&today.getMonth()===MONTH&&today.getDate()===d;
     const entry=dayEntry(d);
 
+    const isInactive = d<=7 || d>27;
     const cell=document.createElement('div');
-    cell.className='day-cell'+(isSun?' sun':isSat?' sat':'')+(isToday?' today':'');
+    cell.className='day-cell'+(isSun?' sun':isSat?' sat':'')+(isToday?' today':'')+(isInactive?' inactive':'');
     cell.onclick=()=>openDay(d);
 
     const num=document.createElement('div');num.className='day-num';num.textContent=d;
