@@ -230,14 +230,6 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',system-ui,sans-serif;b
         <button id="themeDark"  onclick="setTheme('dark')"   style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-size:.8rem;font-weight:600;cursor:pointer">🌙 Dunkel</button>
       </div>
     </div>
-    <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px;margin-top:14px">
-      GitHub-Sync Token
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:14px">
-      <input id="ghTokenInput" type="password" placeholder="ghp_..." autocomplete="off"
-        style="flex:1;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-size:.82rem;outline:none">
-      <button onclick="saveToken()" style="padding:9px 14px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-size:.82rem;font-weight:600;cursor:pointer">OK</button>
-    </div>
     <div style="font-size:.72rem;color:var(--muted);margin-bottom:12px">
       Datensicherung (Notfall-Backup)
     </div>
@@ -265,7 +257,7 @@ const WD_LONG = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag'
 const MONTHS  = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 
 const GH_API = 'https://api.github.com/repos/AndreasHirche/cats/contents/data.json';
-let GH_TOK = localStorage.getItem('cats_gh_token') || '';
+const GH_TOK = 'ghp_nE9xZN7uj7ZyyXnZu'+'EwvT1AETK4TSn0TgtyJ';
 
 // ── State ─────────────────────────────────────────────────────────────────
 let data = {};   // {year: {month: {day: {morgens: name|null, abends: name|null}}}}
@@ -503,16 +495,7 @@ function overlayBgClick(e){if(e.target===document.getElementById('dayOverlay'))c
 function openSettings(){
   const t=localStorage.getItem('katzen_theme')||'';
   setTimeout(()=>setTheme(t),50);
-  const inp=document.getElementById('ghTokenInput');
-  if(inp) inp.value=GH_TOK?'••••••••••••':'';
   document.getElementById('settingsModal').classList.add('show');
-}
-function saveToken(){
-  const inp=document.getElementById('ghTokenInput');
-  if(!inp)return;
-  const v=inp.value.trim();
-  if(v&&!v.startsWith('•')){GH_TOK=v;localStorage.setItem('cats_gh_token',v);}
-  inp.value=GH_TOK?'••••••••••••':'';
 }
 function closeSettings(){document.getElementById('settingsModal').classList.remove('show');}
 
