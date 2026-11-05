@@ -577,15 +577,20 @@ function addSwipe(el,onLeft,onRight){
 }
 try{addSwipe(document.getElementById('daySheet'),()=>navigateDay(1),()=>navigateDay(-1));}catch(e){}
 
-// ── Cat melody ────────────────────────────────────────────────────────────
+// ── Cat melody (spielt bei der ersten Interaktion — Browser blockieren Autoplay) ──
+var _melodyDone=false;
 function playCatMelody(){
+  if(_melodyDone)return;
   try{
-    const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;
-    const ac=new Ctx();if(ac.state==='suspended')ac.resume();
-    const notes=[523,587,659,784,659,587,523]; // C-D-E-G-E-D-C
-    let t=ac.currentTime+0.05;
-    notes.forEach(f=>{
-      const o=ac.createOscillator(),g=ac.createGain();
+    var Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;
+    var ac=new Ctx();
+    if(ac.state==='suspended'){ac.resume();}
+    if(ac.state!=='running'){try{ac.close();}catch(e){}return;} // kein User-Gesture -> spaeter erneut
+    _melodyDone=true;
+    var notes=[523,587,659,784,659,587,523]; // C-D-E-G-E-D-C
+    var t=ac.currentTime+0.05;
+    notes.forEach(function(f){
+      var o=ac.createOscillator(),g=ac.createGain();
       o.type='triangle';
       o.frequency.setValueAtTime(f*0.95,t);
       o.frequency.linearRampToValueAtTime(f,t+0.06);      // "mee" rauf
@@ -597,16 +602,15 @@ function playCatMelody(){
       o.start(t);o.stop(t+0.28);
       t+=0.23;
     });
+    ['pointerdown','touchstart','keydown','click'].forEach(function(ev){window.removeEventListener(ev,playCatMelody,true);});
   }catch(e){}
 }
-let _melodyPlayed=false;
-function _tryMelody(){if(_melodyPlayed)return;_melodyPlayed=true;playCatMelody();}
-['pointerdown','touchstart','keydown'].forEach(ev=>window.addEventListener(ev,_tryMelody,{once:true}));
+['pointerdown','touchstart','keydown','click'].forEach(function(ev){window.addEventListener(ev,playCatMelody,true);});
 
 // ── Splash ────────────────────────────────────────────────────────────────
 (function(){
   const splash=document.getElementById('splash');
-  setTimeout(()=>{splash.classList.add('splash-open');_tryMelody();},500);
+  setTimeout(()=>splash.classList.add('splash-open'),500);
   setTimeout(()=>splash.classList.add('done'),2200);
 })();
 
